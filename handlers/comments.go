@@ -22,6 +22,7 @@ func CreateComment(w http.ResponseWriter, req *http.Request, ctx *DB.Context) {
 	json.Unmarshal(reqBytes, &comment)
 	comment.AgreementID = agreementID
 	_ = comment.SaveWithCtx(ctx)
+	go models.SendCommentEmail(comment)
 
 	a, _ := json.Marshal(comment)
 	w.Write(a)
@@ -30,7 +31,16 @@ func CreateComment(w http.ResponseWriter, req *http.Request, ctx *DB.Context) {
 func GetComments(w http.ResponseWriter, req *http.Request, ctx *DB.Context) {
 	vars := mux.Vars(req)
 	id := vars["agreementID"]
-	comments, _ := models.FindCommentsByAgreementID(id, ctx)
+
+	params := req.URL.Query()
+	var version string
+	version = params.Get("version")
+	var comments []*models.Comment
+	if version != "" {
+		comments, _ = models.FindCommentsByVersionID(version, ctx)
+	} else {
+		comments, _ = models.FindCommentsByAgreementID(id, ctx)
+	}
 
 	u, _ := json.Marshal(comments)
 	w.Write(u)
