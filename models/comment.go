@@ -1,13 +1,13 @@
 package models
 
 import (
+	"encoding/json"
 	"github.com/nu7hatch/gouuid"
 	"github.com/streadway/amqp"
 	rbtmq "github.com/wurkhappy/Rabbitmq-go-wrapper"
 	"github.com/wurkhappy/WH-Comments/DB"
-	"labix.org/v2/mgo/bson"
 	"time"
-	"encoding/json"
+	"log"
 )
 
 type Comment struct {
@@ -32,36 +32,62 @@ func init() {
 	connection = cn
 }
 
-func FindCommentsByAgreementID(id string, ctx *DB.Context) (comments []*Comment, err error) {
-	err = ctx.Database.C("comments").Find(bson.M{"agreementid": id}).Sort("-lastmodified").All(&comments)
-	if err != nil {
-		return nil, err
+func NewComment() *Comment {
+	id, _ := uuid.NewV4()
+	return &Comment{
+		ID:          id.String(),
+		DateCreated: time.Now(),
 	}
-
-	return comments, nil
 }
 
-func FindCommentsByVersionID(id string, ctx *DB.Context) (comments []*Comment, err error) {
-	err = ctx.Database.C("comments").Find(bson.M{"agreementversionid": id}).Sort("-lastmodified").All(&comments)
+func (c *Comment) Save() (err error) {
+	jsonByte, _ := json.Marshal(c)
+	_, err = DB.UpsertComment.Query(c.ID, string(jsonByte))
 	if err != nil {
-		return nil, err
-	}
-
-	return comments, nil
-}
-
-func (c *Comment) SaveWithCtx(ctx *DB.Context) (err error) {
-	if c.ID == "" {
-		commentid, _ := uuid.NewV4()
-		c.ID = commentid.String()
-	}
-	c.DateCreated = time.Now()
-
-	coll := ctx.Database.C("comments")
-	if _, err := coll.UpsertId(c.ID, &c); err != nil {
+		log.Print(err)
 		return err
 	}
 	return nil
+}
+
+func FindCommentsByAgreementID(id string) (comments []*Comment, err error) {
+	r, err := DB.FindCommentsByAgreementID.Query(id)
+	if err != nil {
+		return nil, err
+	}
+	defer r.Close()
+
+	for r.Next() {
+		var s string
+		err = r.Scan(&s)
+		if err != nil {
+			return nil, err
+		}
+		var c *Comment
+		json.Unmarshal([]byte(s), &c)
+		comments = append(comments, c)
+	}
+	return comments, nil
+}
+
+func FindCommentsByVersionID(id string) (comments []*Comment, err error) {
+	r, err := DB.FindCommentsByVersionID.Query(id)
+	if err != nil {
+		return nil, err
+	}
+	defer r.Close()
+
+	for r.Next() {
+		var s string
+		err = r.Scan(&s)
+		if err != nil {
+			return nil, err
+		}
+		var c *Comment
+		json.Unmarshal([]byte(s), &c)
+		comments = append(comments, c)
+	}
+	return comments, nil
 }
 
 func SendCommentEmail(c *Comment) {

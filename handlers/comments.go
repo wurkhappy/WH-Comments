@@ -4,31 +4,30 @@ import (
 	"bytes"
 	"encoding/json"
 	"github.com/gorilla/mux"
-	"github.com/wurkhappy/WH-Comments/DB"
 	"github.com/wurkhappy/WH-Comments/models"
 	// "log"
 	"net/http"
 )
 
-func CreateComment(w http.ResponseWriter, req *http.Request, ctx *DB.Context) {
+func CreateComment(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	agreementID := vars["agreementID"]
 
-	comment := new(models.Comment)
+	comment := models.NewComment()
 
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(req.Body)
 	reqBytes := buf.Bytes()
 	json.Unmarshal(reqBytes, &comment)
 	comment.AgreementID = agreementID
-	_ = comment.SaveWithCtx(ctx)
+	_ = comment.Save()
 	go models.SendCommentEmail(comment)
 
 	a, _ := json.Marshal(comment)
 	w.Write(a)
 }
 
-func GetComments(w http.ResponseWriter, req *http.Request, ctx *DB.Context) {
+func GetComments(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	id := vars["agreementID"]
 
@@ -37,9 +36,9 @@ func GetComments(w http.ResponseWriter, req *http.Request, ctx *DB.Context) {
 	version = params.Get("version")
 	var comments []*models.Comment
 	if version != "" {
-		comments, _ = models.FindCommentsByVersionID(version, ctx)
+		comments, _ = models.FindCommentsByVersionID(version)
 	} else {
-		comments, _ = models.FindCommentsByAgreementID(id, ctx)
+		comments, _ = models.FindCommentsByAgreementID(id)
 	}
 
 	u, _ := json.Marshal(comments)
