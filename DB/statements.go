@@ -9,9 +9,6 @@ import (
 var UpsertComment *sql.Stmt
 var FindCommentsByAgreementID *sql.Stmt
 var FindCommentsByVersionID *sql.Stmt
-var DeleteUser *sql.Stmt
-var FindUsers *sql.Stmt
-var SyncWithExistingInvitation *sql.Stmt
 
 func CreateStatements() {
 	var err error
@@ -26,16 +23,6 @@ func CreateStatements() {
 	}
 
 	FindCommentsByVersionID, err = DB.Prepare("SELECT data FROM comment WHERE data->>'agreementVersionID' = $1")
-	if err != nil {
-		panic(err)
-	}
-
-	DeleteUser, err = DB.Prepare("DELETE FROM wh_user WHERE id = $1")
-	if err != nil {
-		panic(err)
-	}
-
-	FindUsers, err = DB.Prepare("SELECT data FROM wh_user WHERE id = ANY($1)")
 	if err != nil {
 		panic(err)
 	}
