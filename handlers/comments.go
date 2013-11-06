@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"github.com/gorilla/mux"
 	"github.com/wurkhappy/WH-Comments/models"
-	// "log"
 	"net/http"
 )
 
@@ -14,12 +13,14 @@ func CreateComment(w http.ResponseWriter, req *http.Request) {
 	agreementID := vars["agreementID"]
 
 	comment := models.NewComment()
+	date := comment.DateCreated
 
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(req.Body)
 	reqBytes := buf.Bytes()
 	json.Unmarshal(reqBytes, &comment)
 	comment.AgreementID = agreementID
+	comment.DateCreated = date
 	_ = comment.Save()
 	go models.SendCommentEmail(comment)
 
