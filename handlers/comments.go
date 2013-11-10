@@ -1,40 +1,38 @@
 package handlers
 
 import (
-	"bytes"
 	"encoding/json"
-	"github.com/gorilla/mux"
+	"fmt"
 	"github.com/wurkhappy/WH-Comments/models"
 	"net/http"
 )
 
-func CreateComment(w http.ResponseWriter, req *http.Request) {
-	vars := mux.Vars(req)
-	agreementID := vars["agreementID"]
+func CreateComment(params map[string]interface{}, body []byte) ([]byte, error, int) {
+	agreementID := params["agreementID"].(string)
 
 	comment := models.NewComment()
 	date := comment.DateCreated
 
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(req.Body)
-	reqBytes := buf.Bytes()
-	json.Unmarshal(reqBytes, &comment)
+	json.Unmarshal(body, &comment)
 	comment.AgreementID = agreementID
 	comment.DateCreated = date
-	_ = comment.Save()
+	err := comment.Save()
+	if err != nil {
+		return nil, fmt.Errorf("%s %s", "Error saving: ", err.Error()), http.StatusBadRequest
+	}
 	go models.SendCommentEmail(comment)
 
-	a, _ := json.Marshal(comment)
-	w.Write(a)
+	c, _ := json.Marshal(comment)
+	return c, nil, http.StatusOK
 }
 
-func GetComments(w http.ResponseWriter, req *http.Request) {
-	vars := mux.Vars(req)
-	id := vars["agreementID"]
+func GetComments(params map[string]interface{}, body []byte) ([]byte, error, int) {
+	id := params["agreementID"].(string)
 
-	params := req.URL.Query()
 	var version string
-	version = params.Get("version")
+	if versions, ok := params["version"]; ok {
+		version = versions.([]string)[0]
+	}
 	var comments []*models.Comment
 	if version != "" {
 		comments, _ = models.FindCommentsByVersionID(version)
@@ -42,7 +40,6 @@ func GetComments(w http.ResponseWriter, req *http.Request) {
 		comments, _ = models.FindCommentsByAgreementID(id)
 	}
 
-	u, _ := json.Marshal(comments)
-	w.Write(u)
-
+	c, _ := json.Marshal(comments)
+	return c, nil, http.StatusOK
 }

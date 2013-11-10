@@ -1,24 +1,47 @@
 package main
 
 import (
-	"github.com/gorilla/mux"
-	"github.com/wurkhappy/WH-Comments/handlers"
+	"bytes"
+	"github.com/wurkhappy/WH-Comments/models"
+	"github.com/wurkhappy/WH-Config"
 	"net/http"
-
+	"strconv"
 )
 
 func main() {
-	r := mux.NewRouter()
-	r.Handle("/agreement/{agreementID}/comments", dbContextMixIn(handlers.CreateComment)).Methods("POST")
-	r.Handle("/agreement/{agreementID}/comments", dbContextMixIn(handlers.GetComments)).Methods("GET")
+	config.Prod()
+	models.Setup()
+	router.Start()
 
-	http.Handle("/", r)
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		//route to function based on the path and method
+		route, pathParams, _ := router.FindRoute(r.URL.String())
+		routeMap := route.Dest.(map[string]interface{})
+		handler := routeMap[r.Method].(func(map[string]interface{}, []byte) ([]byte, error, int))
 
+		//parse the request
+		buf := new(bytes.Buffer)
+		buf.ReadFrom(r.Body)
+
+		//add url params to params var
+		params := make(map[string]interface{})
+		for key, value := range pathParams {
+			params[key] = value
+		}
+		//add url query params
+		values := r.URL.Query()
+		for key, value := range values {
+			params[key] = value
+		}
+
+		//run handler and do standard http stuff(write JSON, return err, set status code)
+		jsonData, err, statusCode := handler(params, buf.Bytes())
+		if err != nil {
+			http.Error(w, `{"status_code":`+strconv.Itoa(statusCode)+`, "description":"`+err.Error()+`"}`, statusCode)
+			return
+		}
+		w.WriteHeader(statusCode)
+		w.Write(jsonData)
+	})
 	http.ListenAndServe(":5050", nil)
-}
-
-type dbContextMixIn func(http.ResponseWriter, *http.Request)
-
-func (h dbContextMixIn) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	h(w, req)
 }

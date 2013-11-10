@@ -3,11 +3,10 @@ package models
 import (
 	"encoding/json"
 	"github.com/nu7hatch/gouuid"
-	"github.com/streadway/amqp"
 	rbtmq "github.com/wurkhappy/Rabbitmq-go-wrapper"
 	"github.com/wurkhappy/WH-Comments/DB"
-	"time"
 	"log"
+	"time"
 )
 
 type Comment struct {
@@ -19,17 +18,6 @@ type Comment struct {
 	Text               string    `json:"text"`
 	MilestoneID        string    `json:"milestoneID"`
 	StatusID           string    `json:"statusID"`
-}
-
-var connection *amqp.Connection
-
-func init() {
-	uri := "amqp://guest:guest@localhost:5672/"
-	cn, err := amqp.Dial(uri)
-	if err != nil {
-		panic(err)
-	}
-	connection = cn
 }
 
 func NewComment() *Comment {
