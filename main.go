@@ -2,11 +2,14 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"github.com/wurkhappy/WH-Comments/models"
 	"github.com/wurkhappy/WH-Config"
 	"github.com/wurkhappy/mdp"
 	"net/url"
 )
+
+var production = flag.Bool("production", false, "Production settings")
 
 type ServiceReq struct {
 	Method string
@@ -15,14 +18,19 @@ type ServiceReq struct {
 }
 
 func main() {
-	config.Prod()
+	flag.Parse()
+	if *production {
+		config.Prod()
+	} else {
+		config.Test()
+	}
 	models.Setup()
 	router.Start()
 
 	gophers := 10
 
 	for i := 0; i < gophers; i++ {
-		worker := mdp.NewWorker("tcp://localhost:5555", config.CommentsService, false)
+		worker := mdp.NewWorker(config.MDPBroker, config.CommentsService, false)
 		defer worker.Close()
 		go route(worker)
 	}
