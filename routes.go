@@ -15,5 +15,11 @@ var router urlrouter.Router = urlrouter.Router{
 				"GET":  handlers.GetComments,
 			},
 		},
+		urlrouter.Route{
+			PathExp: "/agreement/:agreementID/tags",
+			Dest: map[string]interface{}{
+				"GET":  handlers.GetTags,
+			},
+		},
 	},
 }

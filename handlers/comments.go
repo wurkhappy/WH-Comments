@@ -14,8 +14,11 @@ func CreateComment(params map[string]interface{}, body []byte) ([]byte, error, i
 	date := comment.DateCreated
 
 	json.Unmarshal(body, &comment)
+	
 	comment.AgreementID = agreementID
 	comment.DateCreated = date
+	comment.CreateNewTags()
+
 	err := comment.Save()
 	if err != nil {
 		return nil, fmt.Errorf("%s %s", "Error saving: ", err.Error()), http.StatusBadRequest

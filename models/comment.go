@@ -16,8 +16,7 @@ type Comment struct {
 	AgreementVersionID string    `json:"agreementVersionID"`
 	DateCreated        time.Time `json:"dateCreated"`
 	Text               string    `json:"text"`
-	MilestoneID        string    `json:"milestoneID"`
-	StatusID           string    `json:"statusID"`
+	Tags               []*Tag    `json:"tags"`
 }
 
 func NewComment() *Comment {
@@ -88,4 +87,15 @@ func SendCommentEmail(c *Comment) {
 	body, _ := json.Marshal(payload)
 	publisher, _ := rbtmq.NewPublisher(connection, "email", "direct", "email", "/comment")
 	publisher.Publish(body, true)
+}
+
+func (c *Comment) CreateNewTags() {
+	for _, tag := range c.Tags {
+		if tag.ID == "" {
+			t := NewTag()
+			tag.ID = t.ID
+			tag.AgreementID = c.AgreementID
+			tag.Save()
+		}
+	}
 }
