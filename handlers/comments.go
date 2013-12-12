@@ -14,7 +14,7 @@ func CreateComment(params map[string]interface{}, body []byte) ([]byte, error, i
 	date := comment.DateCreated
 
 	json.Unmarshal(body, &comment)
-	
+
 	comment.AgreementID = agreementID
 	comment.DateCreated = date
 	comment.CreateNewTags()
@@ -23,7 +23,15 @@ func CreateComment(params map[string]interface{}, body []byte) ([]byte, error, i
 	if err != nil {
 		return nil, fmt.Errorf("%s %s", "Error saving: ", err.Error()), http.StatusBadRequest
 	}
-	go models.SendCommentEmail(comment)
+	sendEmail := true
+	if createEmail, ok := params["createEmail"]; ok {
+		if createEmail.([]string)[0] == "false" {
+			sendEmail = false
+		}
+	}
+	if sendEmail {
+		go models.SendCommentEmail(comment)
+	}
 
 	c, _ := json.Marshal(comment)
 	return c, nil, http.StatusOK
