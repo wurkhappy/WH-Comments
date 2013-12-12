@@ -24,7 +24,7 @@ func CreateComment(params map[string]interface{}, body []byte) ([]byte, error, i
 		return nil, fmt.Errorf("%s %s", "Error saving: ", err.Error()), http.StatusBadRequest
 	}
 	sendEmail := true
-	if createEmail, ok := params["createEmail"]; ok {
+	if createEmail, ok := params["sendEmail"]; ok {
 		if createEmail.([]string)[0] == "false" {
 			sendEmail = false
 		}
