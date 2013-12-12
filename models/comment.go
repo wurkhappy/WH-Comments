@@ -5,6 +5,7 @@ import (
 	"github.com/nu7hatch/gouuid"
 	rbtmq "github.com/wurkhappy/Rabbitmq-go-wrapper"
 	"github.com/wurkhappy/WH-Comments/DB"
+	"github.com/wurkhappy/WH-Config"
 	"log"
 	"time"
 )
@@ -85,7 +86,7 @@ func SendCommentEmail(c *Comment) {
 	}
 
 	body, _ := json.Marshal(payload)
-	publisher, _ := rbtmq.NewPublisher(connection, "email", "direct", "email", "/comment")
+	publisher, _ := rbtmq.NewPublisher(connection, config.EmailExchange, "direct", config.EmailQueue, "/comment")
 	publisher.Publish(body, true)
 }
 
