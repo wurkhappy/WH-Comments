@@ -7,7 +7,6 @@ import (
 	"github.com/wurkhappy/WH-Comments/models"
 	"github.com/wurkhappy/WH-Config"
 	"github.com/wurkhappy/mdp"
-	"log"
 	"net/url"
 )
 
@@ -54,7 +53,6 @@ func route(worker mdp.Worker) {
 		}
 		var req *ServiceReq
 		json.Unmarshal(request[0], &req)
-		log.Printf("com req is :%s", req)
 
 		//route to function based on the path and method
 		route, pathParams, _ := router.FindRoute(req.Path)
