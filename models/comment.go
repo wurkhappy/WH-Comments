@@ -86,7 +86,11 @@ func SendCommentEmail(c *Comment) {
 	}
 
 	body, _ := json.Marshal(payload)
-	publisher, _ := rbtmq.NewPublisher(connection, config.EmailExchange, "direct", config.EmailQueue, "/comment")
+	publisher, err := rbtmq.NewPublisher(connection, config.EmailExchange, "direct", config.EmailQueue, "/comment")
+	if err != nil {
+		dialRMQ()
+		publisher, _ = rbtmq.NewPublisher(connection, config.EmailExchange, "direct", config.EmailQueue, "/comment")
+	}
 	publisher.Publish(body, true)
 }
 
