@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/wurkhappy/WH-Comments/models"
+	"html/template"
 	"net/http"
 )
 
@@ -18,6 +19,7 @@ func CreateComment(params map[string]interface{}, body []byte) ([]byte, error, i
 	comment.AgreementID = agreementID
 	comment.DateCreated = date
 	comment.CreateNewTags()
+	comment.Text = template.HTMLEscapeString(comment.Text)
 
 	err := comment.Save()
 	if err != nil {
