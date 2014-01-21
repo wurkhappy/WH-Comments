@@ -28,7 +28,7 @@ func main() {
 	}
 	DB.Setup(*production)
 	defer DB.Close()
-	handlers.Setup()
+	models.Setup()
 	router.Start()
 
 	gophers := 10
@@ -38,10 +38,6 @@ func main() {
 	signal.Notify(sigChan, os.Interrupt)
 	signal.Notify(sigChan, os.Kill)
 	signal.Notify(sigChan, syscall.SIGTERM)
-	// go func() {
-	// 	time.Sleep(10 * time.Second)
-	// 	sigChan <- true
-	// }()
 
 	// Create a channel to shut down the program early
 	shutChan := make(chan bool)

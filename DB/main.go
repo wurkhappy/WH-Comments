@@ -25,3 +25,12 @@ func Connect(production bool) {
 		panic(err)
 	}
 }
+
+func Close() {
+	UpsertComment.Close()
+	FindCommentsByAgreementID.Close()
+	FindCommentsByVersionID.Close()
+	SaveTag.Close()
+	FindTagsByAgreementID.Close()
+	DB.Close()
+}
