@@ -21,7 +21,8 @@ func NewTag() *Tag {
 
 func (t *Tag) Save() (err error) {
 	jsonByte, _ := json.Marshal(t)
-	_, err = DB.SaveTag.Query(t.ID, string(jsonByte))
+	r, err := DB.SaveTag.Query(t.ID, string(jsonByte))
+	r.Close()
 	if err != nil {
 		return err
 	}

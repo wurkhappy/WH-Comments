@@ -30,7 +30,8 @@ func NewComment() *Comment {
 
 func (c *Comment) Save() (err error) {
 	jsonByte, _ := json.Marshal(c)
-	_, err = DB.UpsertComment.Query(c.ID, string(jsonByte))
+	r, err := DB.UpsertComment.Query(c.ID, string(jsonByte))
+	r.Close()
 	if err != nil {
 		log.Print(err)
 		return err
